@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: galaxy-web
+spec:
+  ports:
+    - port: 80
+  selector:
+    app: galaxy-web
+  type: NodePort

@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: galaxy-proftpd
+  labels:
+   key: galaxy
+spec:
+
+  volumes:
+  - name: shared-data
+    hostPath:
+     path: /export
+     
+  - name: dockersocket
+    hostPath:
+     path: /var
+     
+  nodeSelector:
+    type: store  
+  
+  securityContext:
+    fsGroup: 0
+     
+  containers:
+
+  - name: galaxy-proftpd 
+    image: abhikghosh41/galaxy-proftpd
+    volumeMounts:
+    - name: shared-data
+      mountPath: /export:z
+    ports:
+    - hostPort: 21
+      containerPort: 21  
+    ports:
+    - hostPort: 22
+      containerPort: 22
+    ports:
+    - containerPort: 21
+    - containerPort: 22
+    - containerPort: 30000
+    - containerPort: 30001
+    - containerPort: 30002
+    - containerPort: 30003
+    - containerPort: 30004
+    - containerPort: 30005
+    - containerPort: 30006
+    - containerPort: 30007
+    - containerPort: 30008
+    - containerPort: 30009
+    - containerPort: 30010
+    env:  
+    - name: proftpd_db_connection
+      value: galaxy@galaxy-postgres
+    - name: proftpd_db_username
+      value: galaxy
+    - name: proftpd_db_password
+      value: chaopagoosaequuashie
+    - name: proftpd_files_dir
+      value: /export/ftp/
+    - name: proftpd_use_sftp
+      value: "True"
+    - name: proftpd_generate_ssh_key
+      value: "False"
+    - name: proftpd_passive_port_low
+      value: "30000"
+    - name: proftpd_passive_port_high
+      value: "30010"
+    
+    securityContext:
+          privileged: true
+          runAsUser: 0
+  

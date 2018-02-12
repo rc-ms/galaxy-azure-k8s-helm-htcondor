@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: galaxy-proftpd
+spec:
+  ports:
+    - port: 22
+      name: sftp
+    - port: 21
+      name: ftp
+    - port: 30000
+      name: ftp0
+    - port: 30001
+      name: ftp1
+    - port: 30002
+      name: ftp2
+    - port: 30003
+      name: ftp3
+    - port: 30004
+      name: ftp4
+    - port: 30005
+      name: ftp5
+    - port: 30006
+      name: ftp6
+    - port: 30007
+      name: ftp7
+    - port: 30008
+      name: ftp8
+    - port: 30009
+      name: ftp9
+    - port: 30010
+      name: ftp10
+    
+  selector:
+    app: galaxy-proftpd
+  type: NodePort

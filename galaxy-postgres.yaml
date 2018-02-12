@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: galaxy-postgres
+  labels:
+   key: galaxy
+spec:
+
+  volumes:
+  - name: shared-data
+    hostPath:
+     path: /export
+     
+    
+  
+  nodeSelector:
+    type: store
+ 
+  containers:
+
+  
+
+  - name: galaxy-postgres
+    image: abhikghosh41/galaxy-postgres
+    volumeMounts:
+    - name: shared-data
+      mountPath: /var/lib/postgresql:z
+    
+    ports:
+    - hostPort: 5432
+      containerPort: 5432
+    
+    resources: {}
+    
+    env:
+    - name: POSTGRES_PASSWORD
+      value: chaopagoosaequuashie
+    - name: POSTGRES_USER
+      value: galaxy
+    - name: POSTGRES_DB
+      value: galaxy
+      
+    securityContext:
+          privileged: true
+          runAsUser: 0
+  
+  
+  

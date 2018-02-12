@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: galaxy-htcondor-executor
+  labels:
+   key1: galaxy
+spec:
+
+  volumes:
+  - name: shared-data
+    hostPath:
+     path: /export
+ 
+    
+    
+  securityContext:
+
+     fsGroup: 0
+  containers:
+  
+  - name: galaxy-htcondor-executor
+    image: abhikghosh41/galaxy-htcondor-executor
+    resources: {}
+    volumeMounts:
+    - name: shared-data
+      mountPath: /export/ 
+       
+    securityContext:
+          privileged: true
+  
+    ports:
+    - containerPort: 9618
+      protocol: TCP
+      
+    securityContext:
+          privileged: true

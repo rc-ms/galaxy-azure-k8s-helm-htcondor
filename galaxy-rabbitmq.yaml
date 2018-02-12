@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: rabbitmq
+spec:
+
+  volumes:
+  - name: shared-data
+    hostPath:
+      path: /export
+  
+  securityContext:
+     supplementalGroups: [1450,1234] 
+     fsGroup: 1234
+
+  containers:
+  
+  - name:  rabbitmq
+    image: rabbitmq:alpine
+    volumeMounts:
+    - name: shared-data
+      mountPath: /var/lib/rabbitmq
+    env: 
+    - name: RABBITMQ_DEFAULT_USER
+      value: galaxy
+    - name: RABBITMQ_DEFAULT_PASS
+      value: vaiJa3ieghai2ief0jao
+    - name: RABBITMQ_DEFAULT_VHOST
+      value: galaxy
+  
+    ports:
+    - containerPort: 80
+    
+    securityContext:
+          privileged: true
+          runAsUser: 0
+    
+    
+  

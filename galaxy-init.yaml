@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: galaxy-init
+spec:
+
+  volumes:
+  - name: shared-data
+    hostPath:
+     path: /export
+     
+ 
+    
+  securityContext:
+
+     fsGroup: 4096
+  nodeSelector:
+    type: store  
+  containers:
+    
+  - name: galaxy-init
+    image: abhikghosh41/galaxykansals-init
+    resources: {}
+    volumeMounts:
+    - name: shared-data
+      mountPath: /export:z 
+  
+    ports:
+    - containerPort: 80
+    
+    securityContext:
+          privileged: true
+          runAsUser: 0

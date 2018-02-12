@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: galaxy-htcondor-executor-big
+spec:
+  replicas: 1
+  selector:
+    app: galaxy-htcondor-executor-big
+  template:
+    metadata:
+      name: galaxy-htcondor-executor-big
+      labels:
+        app: galaxy-htcondor-executor-big
+    spec:
+      volumes:
+      - name: shared-data
+        hostPath:
+         path: /export
+     
+      
+      containers:
+      - name: galaxy-htcondor-executor-big
+        image: abhikghosh41/galaxy-htcondor-executor
+        env:
+        - name: CONDOR_HOST
+          value: galaxy-htcondor
+        - name: CONDOR_CPUS
+          value: "1"
+        - name: CONDOR_MEMORY
+          value: "2048"
+        securityContext:
+          privileged: true
+        ports:
+        - containerPort: 9618
+          protocol: TCP
+        volumeMounts:
+        - name: shared-data
+          mountPath: /export/ 
+    
+        securityContext:
+          privileged: true
+          runAsUser: 0
