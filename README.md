@@ -1,6 +1,7 @@
 # galaxy-kubernetes-htc-condor
 
 ## Overview
+
 This repo and readme describes how to build and run a Galaxy server cluster on Azure using Kubernetes, HTCondor, Helm, and some post install incantations and configurations.
 
 The acceptance criteria for this configuration included the following:
@@ -14,7 +15,7 @@ The acceptance criteria for this configuration included the following:
 
 Before we can start working on Galaxy itself, we need to set up and configure the Kubernetes environment it will run in.
 
-Start by [creating an Azure account](https://azure.microsoft.com/). 
+Start by [creating an Azure account](https://azure.microsoft.com/).
 
 Once you have an account, [install the Azure CLI tools](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest).
 
@@ -59,17 +60,13 @@ $ az account set -s "[your subscription Name here]"
 
 ## Create Your Kubernetes Cluster
 
-
-#### Resources
-
-  * [Deploy Kubernetes clusters for Linux containers](https://docs.microsoft.com/en-us/azure/container-service/kubernetes/container-service-kubernetes-walkthrough)
-  * [Using the Kubernetes web UI with Azure Container Service](https://docs.microsoft.com/en-us/azure/container-service/kubernetes/container-service-kubernetes-ui)
+To c
 
 Get the node info with 
 
-```
+`
 [localhost]: kubectl get nodes
-```
+`
 
 - Let the nodes be 
   - Node master-0 
@@ -184,3 +181,7 @@ Get the node info with
  [localhost]: kubectl expose pod galaxy --type=LoadBalancer
  [localhost]: kubectl expose pod galaxy-proftpd --type=LoadBalancer
  ```
+## Resources
+
+* [Deploy Kubernetes clusters for Linux containers](https://docs.microsoft.com/en-us/azure/container-service/kubernetes/container-service-kubernetes-walkthrough)
+* [Using the Kubernetes web UI with Azure Container Service](https://docs.microsoft.com/en-us/azure/container-service/kubernetes/container-service-kubernetes-ui)
