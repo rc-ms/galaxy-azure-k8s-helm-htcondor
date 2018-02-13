@@ -63,26 +63,62 @@ Note the value in the name field: you'll use that later. If you have multiple ac
 $ az account set -s "[your subscription Name here]"
 `
 
-## Create Your Kubernetes Cluster
+## Create Your AKS Kubernetes Cluster
 
 To create your Kubernetes cluster, we're going to use the new Amazon Container Service (AKS) optimized for Kubernetes.  Some notes as to why:
 
 * You don't pay for the Kubernetes master VMs because the AKS control plane is free
 * You can scale and upgrade your Kubernetes clusters easily and in place
+* Full "upstream" Kubernetes API support
+* Configurations that use AKS spin up and consume fewer compute resources than previous ACS-based versions
 
-Coolio! let's start by creating a resource group:
+That's no small stuff.
 
-`
-az group create --name k8sGalaxy --location eastus2
-`
-
-Not all regions have all versions of VMs to be used for Kubernetes clusters. If you're concerned about specific configurations, specifically as relates to VMs, [refer to this product availability chart](https://azure.microsoft.com/en-us/regions/services/)
-
-Once you've 
-Get the node info with.
+Let's start by creating a resource group:
 
 `
-[localhost]: kubectl get nodes
+az group create --name k8sGalaxy --location centralus
+`
+
+Note that not all regions have all versions of VMs that might be used for Kubernetes clusters. If you're concerned about specific configurations, specifically as relates to VMs, [refer to this product availability chart](https://azure.microsoft.com/en-us/regions/services/); you may generate errors on create but the message will tell you which regions are available (at the time of this writing: eastus,westeurope,centralus,canadacentral,canadaeast).
+
+Now that you've created your resource group, let's create a k8s cluster within it.
+
+`
+az aks create --resource-group k8sGalaxy --name ansAlsGalaxy --generate-ssh-keys
+`
+It may take a few minutes, but if all goes according to plan you'll see a new k8s cluster appear in your portal. Congrats!
+
+### Install the AKS CLI
+
+Now that we've got our shiny new cluster set up, we need to connect to it. To do that, let's install more fun tools.
+
+`
+az aks install-cli
+`
+
+If you're on a Mac and try to install and get permission issues, run again under `sudo`:
+
+`
+sudo az aks install-cli
+`
+
+(At the password prompt, enter the login for your Mac.)
+
+### Check out your cluster
+
+For the CLI tool to connect to your cluster, we have to download the credentials and keys necessary to do so securely, etc. Yup: [there's a command for that](https://www.youtube.com/watch?v=yYey8ntlK_E):
+
+`
+az aks get-credentials --resource-group k8sGalaxy --name ansAlsGalaxy
+'
+
+'
+kubectl get nodes
+NAME                       STATUS    ROLES     AGE       VERSION
+aks-nodepool1-37476279-0   Ready     agent     1h        v1.7.7
+aks-nodepool1-37476279-1   Ready     agent     1h        v1.7.7
+aks-nodepool1-37476279-2   Ready     agent     1h        v1.7.7
 `
 
 - Let the nodes be 
