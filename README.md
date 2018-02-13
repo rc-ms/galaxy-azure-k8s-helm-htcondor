@@ -42,17 +42,22 @@ Depending on which version of Linux you're using, you can install using `yum`, `
 Once you've installed your tools and set up your account, let's verify everything is working correctly. Open a terminal window or command prompt and enter the following:
 
 `
-rc$ az login
-To sign in, use a web browser to open the page https://aka.ms/devicelogin and enter the code [foo] to authenticate.
+$ az login
 `
 
-Verify you can access your subscription information by running the following:
+You should be [prompted to go to this URL (http://aka.ms/devicelogin) and enter the code](https://aka.ms/devicelogin) referenced in your Terminal response to sign in.
+
+`
+To sign in, use a web browser to open the page https://aka.ms/devicelogin and enter the code BPV5A449L to authenticate.
+`
+
+Once you've successfully signed in, verify you can access your subscription information by running the following in your Terminal window:
 
 `
 $ az account list --output=table
 `
 
-Note the value in the name field: you'll use that later. If you have multiple accounts and want to change the default or current active subscriptions (designated by the __IsDefault__ column)
+Note the value in the name field: you'll use that later. If you have multiple accounts and want to change the default (designated by whichever subscription shows as __True__ in the __IsDefault__ column) or current active subscription, use the `set` command 
 
 `
 $ az account set -s "[your subscription Name here]"
@@ -60,9 +65,21 @@ $ az account set -s "[your subscription Name here]"
 
 ## Create Your Kubernetes Cluster
 
-To c
+To create your Kubernetes cluster, we're going to use the new Amazon Container Service (AKS) optimized for Kubernetes.  Some notes as to why:
 
-Get the node info with 
+* You don't pay for the Kubernetes master VMs because the AKS control plane is free
+* You can scale and upgrade your Kubernetes clusters easily and in place
+
+Coolio! let's start by creating a resource group:
+
+`
+az group create --name k8sGalaxy --location eastus2
+`
+
+Not all regions have all versions of VMs to be used for Kubernetes clusters. If you're concerned about specific configurations, specifically as relates to VMs, [refer to this product availability chart](https://azure.microsoft.com/en-us/regions/services/)
+
+Once you've 
+Get the node info with.
 
 `
 [localhost]: kubectl get nodes
