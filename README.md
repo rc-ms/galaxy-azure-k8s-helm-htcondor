@@ -87,6 +87,7 @@ Now that you've created your resource group, let's create a k8s cluster within i
 `
 az aks create --resource-group k8sGalaxy --name ansAlsGalaxy --generate-ssh-keys
 `
+
 It may take a few minutes, but if all goes according to plan you'll see a new k8s cluster appear in your portal. Congrats!
 
 ### Install the AKS CLI
@@ -111,9 +112,9 @@ For the CLI tool to connect to your cluster, we have to download the credentials
 
 `
 az aks get-credentials --resource-group k8sGalaxy --name ansAlsGalaxy
-'
+`
 
-'
+`
 kubectl get nodes
 NAME                       STATUS    ROLES     AGE       VERSION
 aks-nodepool1-37476279-0   Ready     agent     1h        v1.7.7
