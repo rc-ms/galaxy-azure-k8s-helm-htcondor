@@ -114,13 +114,13 @@ For the CLI tool to connect to your cluster, we have to download the credentials
 az aks get-credentials --resource-group k8sGalaxy --name ansAlsGalaxy
 `
 
-`
+```
 kubectl get nodes
 NAME                       STATUS    ROLES     AGE       VERSION
 aks-nodepool1-37476279-0   Ready     agent     1h        v1.7.7
 aks-nodepool1-37476279-1   Ready     agent     1h        v1.7.7
 aks-nodepool1-37476279-2   Ready     agent     1h        v1.7.7
-`
+```
 
 - Let the nodes be 
   - Node master-0 
