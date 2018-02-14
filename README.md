@@ -172,6 +172,27 @@ Cool. Now that we've verified our agents are there and accessible; lets start cr
 `
 az network public-ip create -g MC_k8sGalaxy_ansAlsGalaxy_centralus -n galaxy-ip
 `
+
+We can get the list of IPs available now with:
+
+```
+az network nic list -g MC_k8sGalaxy_ansAlsGalaxy_centralus -o table
+az network nic list -g MC_k8sGalaxy_ansAlsGalaxy_centralus -o table
+EnableIpForwarding    Location    MacAddress         Name                          Primary    ProvisioningState    ResourceGroup                        ResourceGuid
+--------------------  ----------  -----------------  ----------------------------  ---------  -------------------  -----------------------------------  ------------------------------------
+True                  centralus   00-0D-3A-92-21-9A  aks-nodepool1-37476279-nic-0  True       Succeeded            MC_k8sGalaxy_ansAlsGalaxy_centralus  f7bb5530-5ca2-435a-b5b3-609d728bf435
+True                  centralus   00-0D-3A-91-EC-9A  aks-nodepool1-37476279-nic-1  True       Succeeded            MC_k8sGalaxy_ansAlsGalaxy_centralus  277dc614-0b0e-41c0-8372-0383b6798554
+True                  centralus   00-0D-3A-92-2A-4C  aks-nodepool1-37476279-nic-2  True       Succeeded            MC_k8sGalaxy_ansAlsGalaxy_centralus  ed39e5a1-93ae-445f-89b3-2827c8bcb52d
+```
+
+And now we can take the **Name** from the nic list and ask about its associated ipconfig information.
+
+`
+az network nic ip-config list --nic-name aks-nodepool1-37476279-nic-0 -g MC_k8sGalaxy_ansAlsGalaxy_centralus
+`
+
+Okay. Just a little longer.
+
 - make directory export with
   ```
   [Node agent-0]: mkdir -p /export
