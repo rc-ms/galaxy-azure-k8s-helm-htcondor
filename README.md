@@ -114,6 +114,8 @@ For the CLI tool to connect to your cluster, we have to download the credentials
 az aks get-credentials --resource-group k8sGalaxy --name ansAlsGalaxy
 `
 
+We are now ready to begin interacting with our newly-created cluster.  First, let's make sure we're all connected up. To do that we'll start using `kubectl`, the [Kubernetes command-line interface for interacting with k8s clusters](https://kubernetes.io/docs/reference/kubectl/overview/). We'll start with `kubectl get nodes`.
+
 ```
 kubectl get nodes
 NAME                       STATUS    ROLES     AGE       VERSION
@@ -122,23 +124,54 @@ aks-nodepool1-37476279-1   Ready     agent     1h        v1.7.7
 aks-nodepool1-37476279-2   Ready     agent     1h        v1.7.7
 ```
 
-- Let the nodes be 
-  - Node master-0 
-  - Node agent-0 
-  - Node agent-1 
-  
-### Steps
+## Post-create cluster configuration
 
-- Designate one node for storage through kubectl label command 
+For this Galaxy implementations, we're going to directly connect to the Kubernetes agents. One of the agent nodes will be configured as a storage node with an [NFS server](https://help.ubuntu.com/lts/serverguide/network-file-system.html). Shared files will be hosted in an `/export` directory, and the remaining nodes will mount that `/export` directory as NFS clients.
+
+First, use `kubectl` to designate one node (we'll use the '-0' node) for storage (remember to replace the commands below with the __Name__ of the nodes in your k8s cluster).
+
  ```
- [localhost]:kubectl label nodes <Node agent-0> type=store
+ kubectl label nodes aks-nodepool1-37476279-0 type=store
+ node "aks-nodepool1-37476279-0" labeled
  ```
-- ssh to the storage node
-  - To ssh to any node, first ssh to master node with the IP available on the azure portal (create user and add password to all nodes through the azure portal, makes things easier :P) then ssh to any desired node with
-    ```
-    [Node master-0]:-# ssh username@Node agent-0
-    ```
-  
+
+### Find your agent pool
+
+Since it's possible, even likely, that the resource group AKS created to house your cluster is *different* than the one you specified earlier using the Azure CLI, let's first list our resource groups
+
+`
+az group list -o table
+`
+You should see the resource group you created initially in the results. Check as well for another resource group with a concatenation of your group and k8s cluster, as happened with me this go-round.
+
+```
+az group list -o table
+Name                                    Location        Status
+--------------------------------------  --------------  ---------
+
+k8sGalaxy                               centralus       Succeeded
+MC_k8sGalaxy_ansAlsGalaxy_centralus     centralus       Succeeded
+```
+My suspicion is that the agents are in the concatenated version. :)
+
+`
+az resource list -g MC_k8sGalaxy_ansAlsGalaxy_centralus -o table
+`
+Look for your agent pool VMs above in the list that results.  Are they there?  Good.  No? You sure your cluster creation was successful?  Maybe look in another resource group. Once you do find them, let's get some additional info about them:
+
+`
+az vm show -g MC_k8sGalaxy_ansAlsGalaxy_centralus -n aks-nodepool1-37476279-0
+`
+
+I'll spare you the full dump of data; suffice to say it's a lot. 
+
+### Create public IPs for SSH access
+
+Cool. Now that we've verified our agents are there and accessible; lets start creating a public IP for them so we can SSH into them.
+
+`
+az network public-ip create -g MC_k8sGalaxy_ansAlsGalaxy_centralus -n galaxy-ip
+`
 - make directory export with
   ```
   [Node agent-0]: mkdir -p /export
