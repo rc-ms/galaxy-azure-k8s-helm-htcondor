@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [Galaxy Kubernetes Cluster on Azure Using Helm, Charts, NFS, and HTCondor](#galaxy-kubernetes-cluster-on-azure-using-helm-charts-nfs-and-htcondor)
+- [Galaxy Kubernetes Cluster on Azure Using a Helm Chart, NFS Server, and HTCondor](#galaxy-kubernetes-cluster-on-azure-using-a-helm-chart-nfs-server-and-htcondor)
   - [Overview](#overview)
   - [Setup](#setup)
     - [Install the Azure CLI Tools](#install-the-azure-cli-tools)
