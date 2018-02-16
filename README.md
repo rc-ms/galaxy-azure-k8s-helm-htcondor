@@ -1,3 +1,33 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [galaxy-kubernetes-htc-condor](#galaxy-kubernetes-htc-condor)
+  - [Overview](#overview)
+  - [Setup](#setup)
+    - [Install the Azure CLI Tools](#install-the-azure-cli-tools)
+      - [Mac](#mac)
+      - [Windows](#windows)
+      - [Linux](#linux)
+    - [Verify your Azure setup](#verify-your-azure-setup)
+  - [Create Your AKS Kubernetes Cluster](#create-your-aks-kubernetes-cluster)
+    - [Install the AKS CLI](#install-the-aks-cli)
+    - [Check out your cluster](#check-out-your-cluster)
+  - [Post-create cluster configuration](#post-create-cluster-configuration)
+    - [Find your agent pool](#find-your-agent-pool)
+    - [Create public IPs for SSH access](#create-public-ips-for-ssh-access)
+    - [Configure storage node and set up NFS Server](#configure-storage-node-and-set-up-nfs-server)
+    - [Set remaining nodes as NFS clients](#set-remaining-nodes-as-nfs-clients)
+  - [Install Galaxy via a Helm Chart](#install-galaxy-via-a-helm-chart)
+    - [Install Helm and Tiller](#install-helm-and-tiller)
+    - [Choose Your Galaxy Flavor](#choose-your-galaxy-flavor)
+    - [Post-install: Fix your permissions](#post-install-fix-your-permissions)
+    - [Configure HTCondor](#configure-htcondor)
+    - [Configure a Public Static IP](#configure-a-public-static-ip)
+  - [Additional Resources and Links](#additional-resources-and-links)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # galaxy-kubernetes-htc-condor
 
 ## Overview
@@ -157,23 +187,26 @@ My suspicion is that the agents are in the concatenated version. :)
 `
 az resource list -g MC_k8sGalaxy_ansAlsGalaxy_centralus -o table
 `
-Look for your agent pool VMs above in the list that results.  Are they there?  Good.  No? You sure your cluster creation was successful?  Maybe look in another resource group. Once you do find them, let's get some additional info about them:
+
+Look for your agent pool VMs in the list that results.  Are they there?  Good.  No? You sure your cluster creation was successful?  Maybe look in another resource group. Once you do find them, let's get some additional info about them:
 
 `
 az vm show -g MC_k8sGalaxy_ansAlsGalaxy_centralus -n aks-nodepool1-37476279-0
 `
 
-I'll spare you the full dump of data; suffice to say it's a lot. 
+I'll spare you the full dump of data; suffice to say it's a lot. But we're good, right?
 
 ### Create public IPs for SSH access
 
-Cool. Now that we've verified our agents are there and accessible; lets start creating a public IP for them so we can SSH into them.
+(Note that this section plagiarizes pretty much entirely from [this great how-to](https://gist.github.com/tsaarni/624d5406e442f08fe11083169c059a68).)
+
+Okay. Now that we've verified our agents are there and accessible; lets start creating a public IP *for each node* so we can enable SSH access.
 
 `
-az network public-ip create -g MC_k8sGalaxy_ansAlsGalaxy_centralus -n galaxy-ip
+az network public-ip create -g MC_k8sGalaxy_ansAlsGalaxy_centralus -n node0-ip
 `
 
-We can get the list of IPs available now with:
+We can also get the list of IPs available:
 
 ```
 az network nic list -g MC_k8sGalaxy_ansAlsGalaxy_centralus -o table
@@ -185,67 +218,164 @@ True                  centralus   00-0D-3A-91-EC-9A  aks-nodepool1-37476279-nic-
 True                  centralus   00-0D-3A-92-2A-4C  aks-nodepool1-37476279-nic-2  True       Succeeded            MC_k8sGalaxy_ansAlsGalaxy_centralus  ed39e5a1-93ae-445f-89b3-2827c8bcb52d
 ```
 
-And now we can take the **Name** from the nic list and ask about its associated ipconfig information.
+Almost there! Now we take the **Name** from the nic list and ask about its associated ipconfig information.
 
 `
 az network nic ip-config list --nic-name aks-nodepool1-37476279-nic-0 -g MC_k8sGalaxy_ansAlsGalaxy_centralus
 `
 
-Okay. Just a little longer.
+Now we can add the public IP to the ipconfig file. (Crikey. ipconfig? Yes. But not forever, okay?) Note that the `--name ipconfig1` parameter is in the response above; it *should* be ipconfig1 but if for some reason it isn't, check the **Name** field.
 
-- make directory export with
   ```
-  [Node agent-0]: mkdir -p /export
-  [Node agent-0]: chown nobody:nogroup /export
+az network nic ip-config update -g MC_k8sGalaxy_ansAlsGalaxy_centralus --nic-name aks-nodepool1-37476279-nic-0 --name ipconfig1 --public-ip-address node0-ip
   ```
   
-- install NFS server 
+Assuming this update is successful (which it should be), you can now ask about the public ip that was created for this node.
+
+`
+az network public-ip show -g MC_k8sGalaxy_ansAlsGalaxy_centralus -n node0-ip
+`
+
+Woo hoo!  There it is. Our very own IP address. Now we can SSH into node 0. 
+
+Before leaving, let's set up SSH access for the other two nodes that were created. Thanks to command history we can just circle back and swap out -1 and then -2 for each command. Remember that you will need to create a new public IP for each node, as well as update each ipconfig file to incorporate the new IP. (And yes, we really should script this.) Now remember those IP addresses for our next set of work.
+
+### Configure storage node and set up NFS Server
+
+What did we want to do again? Right: SSH into the nodes. We'll start with our storage node.
+
+`
+ssh [your_username]@[your.node0.IP.address]
+`
+
+Remember, the username and password are the accounts you created in the Azure Portal.
+
+Let's get some proper priviledges.
+
+``` bash
+$ sudo su
+[sudo] password for rc:
+root@aks-nodepool1-37476279-0:/home/rc#
   ```
-  [Node agent-0]: sudo apt install nfs-kernel-server
+
+First, we're going to create an `/export` directory.
+
+``` bash
+root@aks-nodepool1-37476279-0:/home/rc# mkdir /export
+root@aks-nodepool1-37476279-0:/home/rc# chown nobody:nogroup /export
   ```
  
-- add "/export" to list of directories eligible for nfs mount with both read and write privileges
-    - You can configure the directories to be exported by adding them to the /etc/exports file. For example:
+Now we'll install and start NFS server.
+
+``` bash
+root@aks-nodepool1-37476279-0:/home/rc# sudo apt install nfs-kernel-server
       ```
+
+After install, add the `/export` directory to the list of directories eligible for nfs mount with both read and write privileges. We'll do it by adding the following entries to the `/etc/exports` file using vi (if your vi is rusty, [i find this page helpful](http://www.lagmonster.org/docs/vi.html)).
+
+``` bash
+root@aks-nodepool1-37476279-0:/home/rc# vi /etc/exports
+```
+
+Once you've placed your cursor where you want (don't forget to press the 'i' key :) ), copy the below and then save (`Esc`, `wq:`):
+
+``` vi
       /ubuntu  *(ro,sync,no_root_squash)
       /export  *(rw,sync,no_root_squash)
       ```
-- edit /etc/hosts.allow
-  - add
+
+And now for the `hosts.allow` file
+
+``` bash
+vi /etc/hosts.allow
   ```
+
+Copy and paste the following:
+
+``` vi
   ALL: ALL
   ```
     
-- start service with
+Ok. Now we're ready to start the service.
+
+``` bash
+root@aks-nodepool1-37476279-0:/etc# sudo systemctl start nfs-kernel-server.service
   ```
-  [Node agent-0]: sudo systemctl start nfs-kernel-server.service
+
+### Set remaining nodes as NFS clients
+
+We should know the SSH dance pretty well now. For the remaining nodes, we're going to also create an `/export` directory, but instead of NFS Server incantations, they'll be NFS clients and mount the server's `/export` directory.  
+
+Why do we have to do this, you ask? (Or maybe you don't.) Regardless, we're going through these steps because of the way Galaxy handles files in its current state. Our experience shows the most performant configuration is enabling NFS support, especially if we want to have files uploaded through the Galaxy UI be available for scalable compute jobs.
+
+(FYI, I find it helpful to run these commands in a new terminal window, keeping the storage node session open in case I need to stop and restart the NFS server.)
+
+Once connected to one of your remaining nodes, `sudo su` and create an `/export` directory again:
+
+``` bash
+root@aks-nodepool1-37476279-1:/home/rc# mkdir /export
   ```
  
-- ssh to all other nodes
-  ```
-  [Node any]:-# ssh username@Node agent-(all except 0)
-  [Node agent-(all except 0)]: mkdir -p /export
-  [Node agent-(all except 0)]: sudo mount <Node agent-0>:/export /export
-  ```
-  
-- Install helm chart with
-  ```
-  [localhost]: helm install galaxy
-  ```
-  
-- ssh to storage node using same steps above, then, in order to get rid of the permission denied error:
-  ```
-  [Node agent-0]: cd /export
-  [Node agent-0]: chmod 777 -R * 
-  ```
-  
-- check if galaxy is running with
-  ```
-  [localhost]: kubectl port-forward galaxy 8080:80
-  ```
-  and then browse to localhost:8080
+Now, though, we're going to mount the storage node's `/export` directory.
 
-#### Setup Htcondor
+``` bash
+sudo mount aks-nodepool1-37476279-0:/export /export
+  ```
+
+If you get a `permission denied` message, return to your storage node and stop and restart the NFS service. I don't know why this works, but it does.
+
+``` bash
+root@aks-nodepool1-37476279-0:/etc# sudo systemctl stop nfs-kernel-server.service
+root@aks-nodepool1-37476279-0:/etc# sudo systemctl start nfs-kernel-server.service
+  ```
+  
+## Install Galaxy via a Helm Chart
+
+Bet you thought we'd never get here. I know I did. Now we're going to get ready to build and deploy Galaxy via a Helm Chart.
+
+### Install Helm and Tiller
+
+Ok but first let's [install Helm](https://docs.helm.sh/using_helm/#installing-helm). For Mac, we'll use good old `brew`.
+
+``` bash
+brew install kubernetes-helm
+  ```
+
+With Helm installed, we'll install Tiller by running `helm init`.
+
+``` bash
+helm init
+  ```
+### Choose Your Galaxy Flavor
+  
+Now you're (finally!) ready to start working with Galaxy! This is a critical moment. Which Galaxy do you want to install into your cluster? If you have cloned this repository and you navigated to its directory in Terminal, you can install this repo into your new cluster with the following command.
+
+``` bash
+helm install galaxy
+  ```
+
+[Other installation options obtain as well](https://docs.helm.sh/using_helm/#more-installation-methods).
+
+### Post-install: Fix your permissions
+
+While your Galaxy may be installed and running, it will also likely throw some permission issues if you tried to load it in your browser. So let's nip that in the bud.
+
+If you haven't kept your storage node SSH session open by chance, let's connect again and run these commands on your `/export` directory
+
+``` bash
+root@aks-nodepool1-37476279-0: cd /export
+root@aks-nodepool1-37476279-0: chmod 777 -R *
+  ```
+  
+To set up your k8s cluster to load the Galaxy web UI in your local browser, run this command on your local computer (not one of the agent nodes).
+
+``` bash
+kubectl port-forward galaxy 8080:80
+  ```
+
+Now you can open your browser and point it at the URL you specified above (in this case you are forwarding the Galaxy response to port 8080 so enter the URL http://localhost:8080 in your browser; if for some reason you get an error on port 8080 feel free to try another port such as 8090 or 13080).
+
+### Configure HTCondor
 
 - get shell to galaxy-htcondor container
 ```
@@ -280,16 +410,24 @@ Okay. Just a little longer.
   HOSTALLOW_NEGOTIATOR = *
   HOSTALLOW_ADMINISTRATOR = *
   ```
-  - restart condor with 
+Restart condor.
+
   ```
     [root@galaxy]:condor_restart
   ```
- - to assign a static public IP to galaxy and galaxy-proftpd server run 
- ```
+
+### Configure a Public Static IP
+
+We would imagine that given you've gone to set up this awesome Galaxy server, you don't want people to have to port-forward from `kubectl` to access it. To set one up in Azure, you can do so from the portal or  To assign a static public IP to galaxy and galaxy-proftpd server run 
+
+``` bash
  [localhost]: kubectl expose pod galaxy --type=LoadBalancer
  [localhost]: kubectl expose pod galaxy-proftpd --type=LoadBalancer
  ```
-## Resources
+
+[This article gives a nice summary on your options](http://www.techdiction.com/2017/11/22/deploying-a-kubernetes-service-on-azure-with-a-specific-ip-addresses/).
+
+## Additional Resources and Links
 
 * [Deploy Kubernetes clusters for Linux containers](https://docs.microsoft.com/en-us/azure/container-service/kubernetes/container-service-kubernetes-walkthrough)
 * [Using the Kubernetes web UI with Azure Container Service](https://docs.microsoft.com/en-us/azure/container-service/kubernetes/container-service-kubernetes-ui)
