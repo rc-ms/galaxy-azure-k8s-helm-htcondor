@@ -28,16 +28,21 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# galaxy-kubernetes-htc-condor
+# Galaxy Kubernetes Cluster on Azure Using Helm, Charts, NFS, and HTCondor
 
 ## Overview
 
-This repo and readme describes how to build and run a Galaxy server cluster on Azure using Kubernetes, HTCondor, Helm, and some post install incantations and configurations.
+This readme describes how to build and run a Galaxy server cluster on Azure using Kubernetes, HTCondor, Helm, and some post install incantations and configurations. It was built to support the [Neurolincs](http://neurolincs.org/) epigenome workflow of the [Fraenkel Lab at MIT](http://fraenkel.mit.edu/) in support of the [AnswerALS Foundation research plan](http://research.answerals.org/) seeking a cure for [Amyotrophic Lateral Sclerosis](https://en.wikipedia.org/wiki/Amyotrophic_lateral_sclerosis).
 
 The acceptance criteria for this configuration included the following:
 
-- At least 60 TB of accessible storage
-- blah blah blah
+- At least 60 TB of accessible storage for genome data and algorithm output
+- FTP, Galaxy web UI import, and direct file upload options
+- Sufficient peformance for uploaded data
+- Dynamic scaling
+- [Kubernetes](https://kubernetes.io/) orchestration
+- Package management via [Helm](https://helm.sh/) chart for external configurability, consistency with Galaxy Cloudman next-generation support
+- NFS server/client configuration for Galaxy file-management support
 
 ## Setup
 
