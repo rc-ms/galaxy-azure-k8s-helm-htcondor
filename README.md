@@ -32,7 +32,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# Galaxy Kubernetes Cluster on Azure Using Helm, Charts, NFS, and HTCondor
+# Galaxy Kubernetes Cluster on Azure Using a Helm Chart, NFS Server, and HTCondor
 
 ## Overview
 
