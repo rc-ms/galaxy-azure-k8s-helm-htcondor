@@ -36,10 +36,10 @@ This repo and readme describes how to build and run a Galaxy server cluster on A
 
 The acceptance criteria for this configuration included the following:
 
-* At least 60 TB of accessible storage
-* blah blah blah
+- At least 60 TB of accessible storage
+- blah blah blah
 
-## Setup 
+## Setup
 
 ### Install the Azure CLI Tools
 
@@ -87,7 +87,7 @@ Once you've successfully signed in, verify you can access your subscription info
 $ az account list --output=table
 `
 
-Note the value in the name field: you'll use that later. If you have multiple accounts and want to change the default (designated by whichever subscription shows as __True__ in the __IsDefault__ column) or current active subscription, use the `set` command 
+Note the value in the name field: you'll use that later. If you have multiple accounts and want to change the default (designated by whichever subscription shows as __True__ in the __IsDefault__ column) or current active subscription, use the `set` command
 
 `
 $ az account set -s "[your subscription Name here]"
@@ -97,10 +97,10 @@ $ az account set -s "[your subscription Name here]"
 
 To create your Kubernetes cluster, we're going to use the new Amazon Container Service (AKS) optimized for Kubernetes.  Some notes as to why:
 
-* You don't pay for the Kubernetes master VMs because the AKS control plane is free
-* You can scale and upgrade your Kubernetes clusters easily and in place
-* Full "upstream" Kubernetes API support
-* Configurations that use AKS spin up and consume fewer compute resources than previous ACS-based versions
+- You don't pay for the Kubernetes master VMs because the AKS control plane is free
+- You can scale and upgrade your Kubernetes clusters easily and in place
+- Full "upstream" Kubernetes API support
+- Configurations that use AKS spin up and consume fewer compute resources than previous ACS-based versions
 
 That's no small stuff.
 
@@ -146,7 +146,7 @@ az aks get-credentials --resource-group k8sGalaxy --name ansAlsGalaxy
 
 We are now ready to begin interacting with our newly-created cluster.  First, let's make sure we're all connected up. To do that we'll start using `kubectl`, the [Kubernetes command-line interface for interacting with k8s clusters](https://kubernetes.io/docs/reference/kubectl/overview/). We'll start with `kubectl get nodes`.
 
-```
+``` bash
 kubectl get nodes
 NAME                       STATUS    ROLES     AGE       VERSION
 aks-nodepool1-37476279-0   Ready     agent     1h        v1.7.7
@@ -160,7 +160,7 @@ For this Galaxy implementations, we're going to directly connect to the Kubernet
 
 First, use `kubectl` to designate one node (we'll use the '-0' node) for storage (remember to replace the commands below with the __Name__ of the nodes in your k8s cluster).
 
- ```
+ ``` bash
  kubectl label nodes aks-nodepool1-37476279-0 type=store
  node "aks-nodepool1-37476279-0" labeled
  ```
@@ -174,7 +174,7 @@ az group list -o table
 `
 You should see the resource group you created initially in the results. Check as well for another resource group with a concatenation of your group and k8s cluster, as happened with me this go-round.
 
-```
+``` bash
 az group list -o table
 Name                                    Location        Status
 --------------------------------------  --------------  ---------
@@ -182,6 +182,7 @@ Name                                    Location        Status
 k8sGalaxy                               centralus       Succeeded
 MC_k8sGalaxy_ansAlsGalaxy_centralus     centralus       Succeeded
 ```
+
 My suspicion is that the agents are in the concatenated version. :)
 
 `
@@ -208,7 +209,7 @@ az network public-ip create -g MC_k8sGalaxy_ansAlsGalaxy_centralus -n node0-ip
 
 We can also get the list of IPs available:
 
-```
+``` bash
 az network nic list -g MC_k8sGalaxy_ansAlsGalaxy_centralus -o table
 az network nic list -g MC_k8sGalaxy_ansAlsGalaxy_centralus -o table
 EnableIpForwarding    Location    MacAddress         Name                          Primary    ProvisioningState    ResourceGroup                        ResourceGuid
@@ -226,7 +227,7 @@ az network nic ip-config list --nic-name aks-nodepool1-37476279-nic-0 -g MC_k8sG
 
 Now we can add the public IP to the ipconfig file. (Crikey. ipconfig? Yes. But not forever, okay?) Note that the `--name ipconfig1` parameter is in the response above; it *should* be ipconfig1 but if for some reason it isn't, check the **Name** field.
 
-```
+``` bash
 az network nic ip-config update -g MC_k8sGalaxy_ansAlsGalaxy_centralus --nic-name aks-nodepool1-37476279-nic-0 --name ipconfig1 --public-ip-address node0-ip
 ```
 
@@ -236,7 +237,7 @@ Assuming this update is successful (which it should be), you can now ask about t
 az network public-ip show -g MC_k8sGalaxy_ansAlsGalaxy_centralus -n node0-ip
 `
 
-Woo hoo!  There it is. Our very own IP address. Now we can SSH into node 0. 
+Woo hoo!  There it is. Our very own IP address. Now we can SSH into node 0.
 
 Before leaving, let's set up SSH access for the other two nodes that were created. Thanks to command history we can just circle back and swap out -1 and then -2 for each command. Remember that you will need to create a new public IP for each node, as well as update each ipconfig file to incorporate the new IP. (And yes, we really should script this.) Now remember those IP addresses for our next set of work.
 
@@ -304,7 +305,7 @@ root@aks-nodepool1-37476279-0:/etc# sudo systemctl start nfs-kernel-server.servi
 
 ### Set remaining nodes as NFS clients
 
-We should know the SSH dance pretty well now. For the remaining nodes, we're going to also create an `/export` directory, but instead of NFS Server incantations, they'll be NFS clients and mount the server's `/export` directory.  
+We should know the SSH dance pretty well now. For the remaining nodes, we're going to also create an `/export` directory, but instead of NFS Server incantations, they'll be NFS clients and mount the server's `/export` directory.
 
 Why do we have to do this, you ask? (Or maybe you don't.) Regardless, we're going through these steps because of the way Galaxy handles files in its current state. Our experience shows the most performant configuration is enabling NFS support, especially if we want to have files uploaded through the Galaxy UI be available for scalable compute jobs.
 
@@ -346,6 +347,7 @@ With Helm installed, we'll install Tiller by running `helm init`.
 ``` bash
 helm init
 ```
+
 ### Choose Your Galaxy Flavor
 
 Now you're (finally!) ready to start working with Galaxy! This is a critical moment. Which Galaxy do you want to install into your cluster? If you have cloned this repository and you navigated to its directory in Terminal, you can install this repo into your new cluster with the following command.
@@ -373,52 +375,74 @@ To set up your k8s cluster to load the Galaxy web UI in your local browser, run 
 kubectl port-forward galaxy 8080:80
 ```
 
-Now you can open your browser and point it at the URL you specified above (in this case you are forwarding the Galaxy response to port 8080 so enter the URL http://localhost:8080 in your browser; if for some reason you get an error on port 8080 feel free to try another port such as 8090 or 13080).
+Now you can open your browser and point it at the URL you specified above (in this case you are forwarding the Galaxy response to port 8080 so enter the URL [http://localhost:8080](http://localhost:8080) in your browser; if for some reason you get an error on port 8080 feel free to try another port such as 8090 or 13080).
 
 ### Configure HTCondor
 
-- get shell to galaxy-htcondor container
-```
+Now we'll  shell to galaxy-htcondor container
+
+``` bash
 [localhost]:kubectl exec -it galaxy-htcondor -- /bin/bash
 ```
-  - edit file /etc/hosts
-  ```
+
+Edit file `/etc/hosts`
+
+``` bash
   [root@galaxy-htcondor]: vi /etc/hosts
-  ```
-  - add 127.0.0.1   galaxy-htcondor
-- get shell to galaxy-htcondor-executor container
 ```
-[localhost]:kubectl exec -it galaxy-htcondor-executor -- /bin/bash
+
+Insert the following line
+
+``` vi
+  127.0.0.1   galaxy-htcondor
 ```
-  - edit file /etc/hosts
-  ```
+
+Shell to galaxy-htcondor-executor container
+
+``` bash
+kubectl exec -it galaxy-htcondor-executor -- /bin/bash
+```
+
+Edit file /etc/hosts
+
+``` bash
   [root@galaxy-htcondor-executor]: vi /etc/hosts
-  ```
-  - add 127.0.0.1   galaxy-htcondor-executor 
-- get shell to galaxy container
 ```
-[localhost]:kubectl exec -it galaxy --container=galaxy  -- /bin/bash
+
+``` vi
+  127.0.0.1   galaxy-htcondor-executor
 ```
-  - edit file /etc/condor/condor_config.local
-  ```
+
+Get shell to galaxy container
+
+``` bash
+kubectl exec -it galaxy --container=galaxy  -- /bin/bash
+```
+
+Edit  `/etc/condor/condor_config.local`
+
+  ``` bash
   [root@galaxy-htcondor]: vi /etc/condor/condor_config.local
   ```
-  - add the following lines
-  ```
+
+Copy and paste the following
+
+``` vi
   HOSTALLOW_READ = *
   HOSTALLOW_WRITE = *
   HOSTALLOW_NEGOTIATOR = *
   HOSTALLOW_ADMINISTRATOR = *
-  ```
+```
+
 Restart condor.
 
-```
+``` bash
     [root@galaxy]:condor_restart
 ```
 
 ### Configure a Public Static IP
 
-We would imagine that given you've gone to set up this awesome Galaxy server, you don't want people to have to port-forward from `kubectl` to access it. To set one up in Azure, you can do so from the portal or  To assign a static public IP to galaxy and galaxy-proftpd server run 
+We would imagine that given you've gone to set up this awesome Galaxy server, you don't want people to have to port-forward from `kubectl` to access it. To set one up in Azure, you can do so from the portal or  To assign a static public IP to galaxy and galaxy-proftpd server run
 
 ``` bash
  [localhost]: kubectl expose pod galaxy --type=LoadBalancer
@@ -427,7 +451,26 @@ We would imagine that given you've gone to set up this awesome Galaxy server, yo
 
 [This article gives a nice summary on your options](http://www.techdiction.com/2017/11/22/deploying-a-kubernetes-service-on-azure-with-a-specific-ip-addresses/).
 
+## Troubleshooting
+
+So many places for it all to go wrong. Hopefully you've been familiarizing yourself with the different to-ing and fro-ing along the way.
+
+### Stopping and Restarting Galaxy
+
+If you come back to your Galaxy after some time away and you find the URL isn't loading or whatnot, here are the steps you can do to perform a "reboot" Kubernetes-style. Open your terminal and run the following commands.
+
+``` bash
+kubectl delete --all pods --all --force --grace-period=0
+kubectl delete --all services --all --force --grace-period=0
+kubectl delete --all deployments --all --force --grace-period=0
+kubectl delete --all rc --all --force --grace-period=0
+```
+
+### Updating Tools
+
+### Upgrading Kubernetes
+
 ## Additional Resources and Links
 
-* [Deploy Kubernetes clusters for Linux containers](https://docs.microsoft.com/en-us/azure/container-service/kubernetes/container-service-kubernetes-walkthrough)
-* [Using the Kubernetes web UI with Azure Container Service](https://docs.microsoft.com/en-us/azure/container-service/kubernetes/container-service-kubernetes-ui)
+- [Deploy Kubernetes clusters for Linux containers](https://docs.microsoft.com/en-us/azure/container-service/kubernetes/container-service-kubernetes-walkthrough)
+- [Using the Kubernetes web UI with Azure Container Service](https://docs.microsoft.com/en-us/azure/container-service/kubernetes/container-service-kubernetes-ui)
