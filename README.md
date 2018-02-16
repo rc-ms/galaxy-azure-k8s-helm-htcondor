@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [galaxy-kubernetes-htc-condor](#galaxy-kubernetes-htc-condor)
+- [Galaxy Kubernetes Cluster on Azure Using Helm, Charts, NFS, and HTCondor](#galaxy-kubernetes-cluster-on-azure-using-helm-charts-nfs-and-htcondor)
   - [Overview](#overview)
   - [Setup](#setup)
     - [Install the Azure CLI Tools](#install-the-azure-cli-tools)
@@ -24,6 +24,10 @@
     - [Post-install: Fix your permissions](#post-install-fix-your-permissions)
     - [Configure HTCondor](#configure-htcondor)
     - [Configure a Public Static IP](#configure-a-public-static-ip)
+  - [Troubleshooting](#troubleshooting)
+    - [Stopping and Restarting Galaxy](#stopping-and-restarting-galaxy)
+    - [Updating Tools](#updating-tools)
+    - [Upgrading Kubernetes](#upgrading-kubernetes)
   - [Additional Resources and Links](#additional-resources-and-links)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
