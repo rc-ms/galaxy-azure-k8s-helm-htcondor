@@ -226,10 +226,10 @@ az network nic ip-config list --nic-name aks-nodepool1-37476279-nic-0 -g MC_k8sG
 
 Now we can add the public IP to the ipconfig file. (Crikey. ipconfig? Yes. But not forever, okay?) Note that the `--name ipconfig1` parameter is in the response above; it *should* be ipconfig1 but if for some reason it isn't, check the **Name** field.
 
-  ```
+```
 az network nic ip-config update -g MC_k8sGalaxy_ansAlsGalaxy_centralus --nic-name aks-nodepool1-37476279-nic-0 --name ipconfig1 --public-ip-address node0-ip
-  ```
-  
+```
+
 Assuming this update is successful (which it should be), you can now ask about the public ip that was created for this node.
 
 `
@@ -256,20 +256,20 @@ Let's get some proper priviledges.
 $ sudo su
 [sudo] password for rc:
 root@aks-nodepool1-37476279-0:/home/rc#
-  ```
+```
 
 First, we're going to create an `/export` directory.
 
 ``` bash
 root@aks-nodepool1-37476279-0:/home/rc# mkdir /export
 root@aks-nodepool1-37476279-0:/home/rc# chown nobody:nogroup /export
-  ```
- 
+```
+
 Now we'll install and start NFS server.
 
 ``` bash
 root@aks-nodepool1-37476279-0:/home/rc# sudo apt install nfs-kernel-server
-      ```
+```
 
 After install, add the `/export` directory to the list of directories eligible for nfs mount with both read and write privileges. We'll do it by adding the following entries to the `/etc/exports` file using vi (if your vi is rusty, [i find this page helpful](http://www.lagmonster.org/docs/vi.html)).
 
@@ -282,25 +282,25 @@ Once you've placed your cursor where you want (don't forget to press the 'i' key
 ``` vi
       /ubuntu  *(ro,sync,no_root_squash)
       /export  *(rw,sync,no_root_squash)
-      ```
+```
 
 And now for the `hosts.allow` file
 
 ``` bash
 vi /etc/hosts.allow
-  ```
+```
 
 Copy and paste the following:
 
 ``` vi
-  ALL: ALL
-  ```
-    
+   ALL: ALL
+```
+
 Ok. Now we're ready to start the service.
 
 ``` bash
 root@aks-nodepool1-37476279-0:/etc# sudo systemctl start nfs-kernel-server.service
-  ```
+```
 
 ### Set remaining nodes as NFS clients
 
@@ -314,21 +314,21 @@ Once connected to one of your remaining nodes, `sudo su` and create an `/export`
 
 ``` bash
 root@aks-nodepool1-37476279-1:/home/rc# mkdir /export
-  ```
- 
+```
+
 Now, though, we're going to mount the storage node's `/export` directory.
 
 ``` bash
 sudo mount aks-nodepool1-37476279-0:/export /export
-  ```
+```
 
 If you get a `permission denied` message, return to your storage node and stop and restart the NFS service. I don't know why this works, but it does.
 
 ``` bash
 root@aks-nodepool1-37476279-0:/etc# sudo systemctl stop nfs-kernel-server.service
 root@aks-nodepool1-37476279-0:/etc# sudo systemctl start nfs-kernel-server.service
-  ```
-  
+```
+
 ## Install Galaxy via a Helm Chart
 
 Bet you thought we'd never get here. I know I did. Now we're going to get ready to build and deploy Galaxy via a Helm Chart.
@@ -339,20 +339,20 @@ Ok but first let's [install Helm](https://docs.helm.sh/using_helm/#installing-he
 
 ``` bash
 brew install kubernetes-helm
-  ```
+```
 
 With Helm installed, we'll install Tiller by running `helm init`.
 
 ``` bash
 helm init
-  ```
+```
 ### Choose Your Galaxy Flavor
-  
+
 Now you're (finally!) ready to start working with Galaxy! This is a critical moment. Which Galaxy do you want to install into your cluster? If you have cloned this repository and you navigated to its directory in Terminal, you can install this repo into your new cluster with the following command.
 
 ``` bash
 helm install galaxy
-  ```
+```
 
 [Other installation options obtain as well](https://docs.helm.sh/using_helm/#more-installation-methods).
 
@@ -365,13 +365,13 @@ If you haven't kept your storage node SSH session open by chance, let's connect 
 ``` bash
 root@aks-nodepool1-37476279-0: cd /export
 root@aks-nodepool1-37476279-0: chmod 777 -R *
-  ```
-  
+```
+
 To set up your k8s cluster to load the Galaxy web UI in your local browser, run this command on your local computer (not one of the agent nodes).
 
 ``` bash
 kubectl port-forward galaxy 8080:80
-  ```
+```
 
 Now you can open your browser and point it at the URL you specified above (in this case you are forwarding the Galaxy response to port 8080 so enter the URL http://localhost:8080 in your browser; if for some reason you get an error on port 8080 feel free to try another port such as 8090 or 13080).
 
@@ -412,9 +412,9 @@ Now you can open your browser and point it at the URL you specified above (in th
   ```
 Restart condor.
 
-  ```
+```
     [root@galaxy]:condor_restart
-  ```
+```
 
 ### Configure a Public Static IP
 
@@ -423,7 +423,7 @@ We would imagine that given you've gone to set up this awesome Galaxy server, yo
 ``` bash
  [localhost]: kubectl expose pod galaxy --type=LoadBalancer
  [localhost]: kubectl expose pod galaxy-proftpd --type=LoadBalancer
- ```
+```
 
 [This article gives a nice summary on your options](http://www.techdiction.com/2017/11/22/deploying-a-kubernetes-service-on-azure-with-a-specific-ip-addresses/).
 
