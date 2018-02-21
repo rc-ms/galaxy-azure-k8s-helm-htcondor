@@ -1,5 +1,8 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+# Building and Running a Galaxy Bioinformatics Web Portal on Azure Using Kubernetes, NFS, and HTCondor
+
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [Galaxy Kubernetes Cluster on Azure Using a Helm Chart, NFS Server, and HTCondor](#galaxy-kubernetes-cluster-on-azure-using-a-helm-chart-nfs-server-and-htcondor)
@@ -31,8 +34,6 @@
   - [Additional Resources and Links](#additional-resources-and-links)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-# Galaxy Kubernetes Cluster on Azure Using a Helm Chart, NFS Server, and HTCondor
 
 ## Overview
 
@@ -454,11 +455,56 @@ Restart condor.
 We would imagine that given you've gone to set up this awesome Galaxy server, you don't want people to have to port-forward from `kubectl` to access it. To set one up in Azure, you can do so from the portal or  To assign a static public IP to galaxy and galaxy-proftpd server run
 
 ``` bash
- [localhost]: kubectl expose pod galaxy --type=LoadBalancer
- [localhost]: kubectl expose pod galaxy-proftpd --type=LoadBalancer
+kubectl expose pod galaxy --type=LoadBalancer
+kubectl expose pod galaxy-proftpd --type=LoadBalancer
 ```
 
-[This article gives a nice summary on your options](http://www.techdiction.com/2017/11/22/deploying-a-kubernetes-service-on-azure-with-a-specific-ip-addresses/).
+#### Create a Public IP using the Azure CLI
+
+[This article gives a great summary of the Public IP options and rationale](http://www.techdiction.com/2017/11/22/deploying-a-kubernetes-service-on-azure-with-a-specific-ip-addresses/) (this section is effectively a micro-version).
+
+First, create a new reserved IP address in the same resource group as your AKS deployment
+
+``` bash
+az network public-ip create -g MC_k8sGalaxy_ansAlsGalaxy_centralus -n galaxyWebServer --dns-name galaxy-web-ip --allocation-method Static
+{
+  "publicIp": {
+    "dnsSettings": {
+      "domainNameLabel": "galaxy-web-ip",
+      "fqdn": "galaxy-web-ip.centralus.cloudapp.azure.com",
+      "reverseFqdn": null
+    },
+    "ipAddress": "your.public.ip.address",
+    "ipConfiguration": null,
+    "ipTags": [],
+    "location": "centralus",
+    "name": "galaxyWebServer",
+    "provisioningState": "Succeeded",
+    "publicIpAddressVersion": "IPv4",
+    "publicIpAllocationMethod": "Static",
+    "resourceGroup": "MC_k8sGalaxy_ansAlsGalaxy_centralus"
+  }
+}
+```
+
+Now that we have our public IP, we can add it to our YAML configuration file. Open `galaxy-webservice2.yaml` and add your IP address to the `loadbalancerIP:` entry.
+
+``` vi
+  loadBalancerIP: your.public.ip.address
+```
+
+Save your file. Now we're going to delete the running service and then re-create it with the updated IP.
+
+``` bash
+kubectl delete -f galaxy-webservice2.yaml
+kubectl create -f galaxy-webservice2.yaml
+```
+
+Did it work? Let's find out.
+
+``` bash
+kubectl get svc --output=wide
+```
 
 ## Troubleshooting
 
