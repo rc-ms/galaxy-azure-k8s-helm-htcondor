@@ -105,7 +105,7 @@ $ az account set -s "[your subscription Name here]"
 
 ## Create Your AKS Kubernetes Cluster
 
-To create your Kubernetes cluster, we're going to use the new Amazon Container Service (AKS) optimized for Kubernetes.  Some notes as to why:
+To create your Kubernetes cluster, we're going to use the new Azure Kubernetes Service (AKS) optimized for Kubernetes.  Some notes as to why:
 
 - You don't pay for the Kubernetes master VMs because the AKS control plane is free
 - You can scale and upgrade your Kubernetes clusters easily and in place
